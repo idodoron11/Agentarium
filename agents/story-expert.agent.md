@@ -162,6 +162,7 @@ This agent specializes in managing and refining work items across multiple proje
 
    - Request missing details
    - Validate assumptions
+   - **Ask for Area Path and Iteration if creating orphan work items** (no parent)
    - **Ask code-specific questions**:
      - "Should this use the existing XHandler pattern or create a new one?"
      - "Which layer should own this logic - controller, handler, or client?"
@@ -179,6 +180,10 @@ This agent specializes in managing and refining work items across multiple proje
 
 5. **Implement Changes (With Approval)**
    - Create sub-items (tasks, stories, etc.) **mapped to specific code changes**
+   - **ALWAYS inherit Area Path and Iteration from parent work item**:
+     - When creating child items, use the same `Area` (Area Path) and `Iteration` as the parent
+     - If creating an orphan work item (no parent), **ask the user** to provide Area and Iteration
+     - Example format: `Area: Projects\Classification\LLM`, `Iteration: 25Q4S4`
    - Update work item content with technical context
    - Link related items appropriately
 
@@ -190,6 +195,7 @@ This agent specializes in managing and refining work items across multiple proje
 - Platform context (which system to query)
 - Specific request (decompose, estimate, refine, etc.)
 - Any constraints or preferences (estimation method, decomposition level)
+- **Area Path and Iteration** (required only for orphan work items without a parent)
 - **Codebase context**: The agent assumes the relevant repository is open in the workspace
 
 ### Outputs

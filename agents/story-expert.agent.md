@@ -1,20 +1,7 @@
 ---
 description: "Expert agent for managing features, user stories, tasks, and bugs across Azure DevOps, Jira, and GitHub. Helps with item decomposition, estimation, and refinement."
 tools:
-  [
-    "runTasks",
-    "search",
-    "atlassian/*",
-    "azure-devops/*",
-    "github/*",
-    "usages",
-    "problems",
-    "testFailure",
-    "githubRepo",
-    "todos",
-    "runSubagent",
-    "runTests",
-  ]
+  ['execute/testFailure', 'execute/runTask', 'execute/getTaskOutput', 'execute/createAndRunTask', 'execute/runTests', 'read/problems', 'read/readFile', 'search', 'web/githubRepo', 'azure-devops/*', 'agent', 'todo']
 ---
 
 # Story Expert Agent

@@ -9,7 +9,7 @@ agent: "story-expert"
 
 Break a plan into independently-grabbable Azure DevOps work items using vertical slices (tracer bullets).
 
-Create work items in the **`Idu Client/Server`** Azure DevOps project using the available Azure DevOps tools. If the parent work item cannot be determined from context, ask the user before creating anything.
+Create work items in the **`Idu Client-Server`** Azure DevOps project using the available Azure DevOps tools. If the parent work item cannot be determined from context, ask the user before creating anything.
 
 If the user passed an Area Path or Iteration as an argument, apply it to every created work item. Otherwise inherit from the parent work item (or ask if creating orphans).
 
@@ -55,7 +55,7 @@ Iterate until the user approves the breakdown.
 
 ### 5. Create the work items in Azure DevOps
 
-For each approved slice, create a new **Task** (or **PBI** if the slice is large enough to warrant its own backlog item) in the `Idu Client/Server` project. Use the work item body template below.
+For each approved slice, create a new **Task** (or **PBI** if the slice is large enough to warrant its own backlog item) in the `Idu Client-Server` project. Use the work item body template below.
 
 Create work items in dependency order (blockers first) so you can reference real work item IDs in the "Blocked by" field. Link blocking relationships using Azure DevOps predecessor/successor links.
 

@@ -1,16 +1,12 @@
 ---
 name: "To PRD"
-description: "Turn the current conversation into a PRD and publish it to GitHub Issues — no interview, just synthesis of what you've already discussed."
-argument-hint: "Optional: triage label to apply (e.g. 'needs-review')"
+description: "Turn the current conversation into a PRD and save it to session memory for review — no interview, just synthesis of what you've already discussed."
+argument-hint: "Optional: feature name or short title for the PRD"
 agent: "agent"
-tools: [vscode, read, 'github/*']
+tools: [vscode, read]
 ---
 
-Take the current conversation context and codebase understanding and produce a PRD. Do NOT interview the user — just synthesize what you already know.
-
-Publish the PRD to GitHub Issues using the available GitHub tools. If the target repository cannot be determined from the workspace, ask the user for it before publishing.
-
-If the user passed a triage label as an argument, apply it to the issue. Otherwise publish without a triage label.
+Take the current conversation context and codebase understanding and produce a PRD. Do NOT interview the user — just synthesize what you already know. Do NOT publish to any issue tracker.
 
 ## Process
 
@@ -20,7 +16,9 @@ If the user passed a triage label as an argument, apply it to the issue. Otherwi
 
    Check with the user that these seams match their expectations.
 
-3. Write the PRD using the template below and **show the full draft to the user**. Ask for explicit approval before publishing — do NOT publish until the user confirms. Incorporate any requested changes, then publish to GitHub Issues.
+3. Write the PRD using the template below. Save it to `/memories/session/PRD.md` using the `#tool:vscode/memory` tool (`create` command, or `str_replace` if the file already exists). Then share a direct link — [PRD.md](/memories/session/PRD.md) — so the user can open and review it.
+
+4. Ask the user for feedback. Incorporate any requested changes by updating `/memories/session/PRD.md` via `#tool:vscode/memory`. Repeat until the user is satisfied. Do NOT publish anywhere.
 
 <prd-template>
 

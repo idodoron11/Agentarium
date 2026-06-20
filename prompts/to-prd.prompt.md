@@ -20,7 +20,7 @@ If the user passed a triage label as an argument, apply it to the issue. Otherwi
 
    Check with the user that these seams match their expectations.
 
-3. Write the PRD using the template below, then publish it to GitHub Issues.
+3. Write the PRD using the template below and **show the full draft to the user**. Ask for explicit approval before publishing — do NOT publish until the user confirms. Incorporate any requested changes, then publish to GitHub Issues.
 
 <prd-template>
 

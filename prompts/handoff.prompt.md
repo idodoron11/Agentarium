@@ -3,7 +3,7 @@ name: "Handoff"
 description: "Compact the current conversation into a handoff document for another agent to pick up."
 argument-hint: "What will the next session be used for?"
 agent: "agent"
-tools: [vscode, read]
+tools: [vscode, read, edit, search]
 ---
 
 Write a handoff document summarising the current conversation so a fresh agent can continue the work. Save it to the workspace root under `handoffs/YYYYMMDD-<topic>.md` (create the `handoffs/` directory if it does not exist; use today's date for YYYYMMDD and derive the topic slug from the user's argument or the conversation subject).

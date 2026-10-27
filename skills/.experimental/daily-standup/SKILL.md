@@ -3,6 +3,8 @@ name: daily-standup
 description: >
   Generates a daily standup summary for the daily meeting by aggregating your recent work across Azure DevOps work items and both Azure DevOps and GitHub repositories. Use this skill when you want to summarize what you worked on yesterday (or last working day), what issues block you, and your progress on work items. Handles Sunday-Thursday work week, and focuses on detailed work item changes and code activity.
 license: See LICENSE in project root
+metadata:
+  internal: true
 ---
 
 # Daily Standup Summary Skill

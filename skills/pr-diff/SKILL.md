@@ -23,7 +23,7 @@ Produces a structured diff between the current branch and a target branch, givin
 
 **You MUST ask the user for the target branch first.** Do not assume.
 
-Use the ask-questions tool with **two questions in the same call**:
+Ask the user **two questions together** (use your ask-questions tool if you have one, otherwise ask in chat):
 
 1. **Target branch** — pre-filled options `origin/main` and `origin/master` (mark `origin/main` as recommended), allow freeform input for other branches (e.g., `develop`, `release/1.0`).
 2. **Related work item / issue** — freeform text, optional. Format depends on platform:
@@ -37,15 +37,15 @@ Store both answers; the work item ID is used in the **Related Work** section of 
 
 You MUST run the appropriate script to get the diff output. This is a **mandatory step** — do not skip it.
 
-Choose the script based on the current OS:
+Choose the script based on the current OS. Resolve the script path against this skill's folder (the directory containing this `SKILL.md`), and run it from the repository under review so it reads that repo's git state:
 
 - **Windows** → use [pr-diff.ps1](./scripts/pr-diff.ps1) via `pwsh`:
   ```
-  pwsh .github/skills/pr-diff/scripts/pr-diff.ps1 -TargetBranch <target>
+  pwsh <skill-folder>/scripts/pr-diff.ps1 -TargetBranch <target>
   ```
 - **macOS / Linux** → use [pr-diff.sh](./scripts/pr-diff.sh):
   ```
-  bash .github/skills/pr-diff/scripts/pr-diff.sh <target>
+  bash <skill-folder>/scripts/pr-diff.sh <target>
   ```
 
 The script produces metadata only (no diff content); use each piece as follows:
@@ -55,7 +55,7 @@ The script produces metadata only (no diff content); use each piece as follows:
 | **Current branch name** | `git rev-parse --abbrev-ref HEAD` | Report which feature branch is under review |
 | **Modified files list** | `git diff --name-status origin/main...HEAD` | Group by status (`A` Added / `M` Modified / `D` Deleted / `R` Renamed) and present a structured scope summary |
 | **Diff line count** | `git diff ... \| wc -l` | Use as a scope signal: ≤1000 lines → read full diff at once; >1000 lines → offer per-file sections or summaries |
-| **Remote origin URL** | `git remote get-url origin` | Extract the `owner` and `repo` to pass to `mcp_io_github_git_create_pull_request` |
+| **Remote origin URL** | `git remote get-url origin` | Extract the `owner` and `repo` for creating the PR |
 | **All remotes** | `git remote -v` | Confirm remote names and URLs before creating a PR |
 
 ### Step 3 — Digest the Output
@@ -84,7 +84,7 @@ The agent MUST read the diff from the terminal output.
 
 **This is a mandatory step for all workflows.**
 
-After reading the diff, use `read_file` to load the **complete contents** of key changed files — not just the lines that appear in the diff. This provides crucial context: imports, class structure, surrounding logic, and existing patterns that the diff alone cannot convey.
+After reading the diff, open the **complete contents** of key changed files — not just the lines that appear in the diff. This provides crucial context: imports, class structure, surrounding logic, and existing patterns that the diff alone cannot convey.
 
 **Prioritize reading:**
 - Files with substantial logic changes (not just formatting)
@@ -147,7 +147,7 @@ Draft a PR title (conventional commit format: `type(scope): summary`, 50-72 char
 - Follow conventional-commit format: `type(scope): summary`
 
 #### Create PR
-After drafting the title and description (see Summarization above), use the `mcp_io_github_git_create_pull_request` tool to open the PR against the target branch. Confirm the title and description with the user before submitting.
+After drafting the title and description (see Summarization above), open the PR against the target branch with your GitHub tool, or with `gh pr create --base <target> --title "<title>" --body "<description>"`. Confirm the title and description with the user before submitting.
 
 ## Notes
 

@@ -1,6 +1,6 @@
 ---
 name: cherry-pick
-description: "Backport a GitHub pull request to one or more branches by cherry-picking its commit(s). Use when: backporting a PR, porting changes to release branches, cherry-pick PR to branch, backport fix to CloudV, backport to release, port PR changes."
+description: "Backport a GitHub pull request to one or more branches by cherry-picking its commit(s). Use when: backporting a PR, porting changes to release branches, cherry-picking a PR onto a branch, porting PR changes to another branch."
 argument-hint: "GitHub PR URL or number, and target branch(es)"
 ---
 
@@ -10,26 +10,34 @@ Backports a merged GitHub pull request to one or more target branches by cherry-
 
 ## When to Use
 
-- "Backport PR #N to Releases/X"
-- "Port these changes to CloudV22, CloudV23"
-- "Cherry-pick PR to release branch"
+- "Backport PR #N to release/1.x"
+- "Port these changes to release/1.x and release/2.x"
+- "Cherry-pick PR to a release branch"
 
 ## Procedure
 
 ### Step 1 — Gather inputs
 
 If not already provided, ask for:
-1. **PR URL or number + repo** (e.g. `Varonis-Systems/ai-classifier#53`)
-2. **Target branches** (e.g. `Releases/CloudV22`, `Releases/CloudV23`)
+1. **PR URL or number + repo** (e.g. `owner/repo#123`)
+2. **Target branches** (e.g. `release/1.x`, `release/2.x`)
 
 ### Step 2 — Fetch PR details
 
-Use `mcp_github_pull_request_read` (method: `get`) to retrieve:
-- PR title, body, merge status
-- `head.repo.full_name` → owner/repo
-- Note the PR state (open or merged); cherry-pick works for botherged); cherry-pick only works for both
+Retrieve the PR details with `gh`:
 
-Also fetch the diff with method `get_diff` to understand the change scope.
+```bash
+gh pr view <pr-number> --repo <owner>/<repo> --json title,body,state,baseRefName,headRefOid,mergeCommit
+```
+
+- Note the title, body and state (open or merged); cherry-pick works for both.
+- `mergeCommit.oid` is the merge commit once the PR is merged; `headRefOid` is the head commit.
+
+Fetch the diff to understand the change scope:
+
+```bash
+gh pr diff <pr-number> --repo <owner>/<repo>
+```
 
 ### Step 3 — Find the cherry-pick commit
 
@@ -58,7 +66,7 @@ Large repos with LFS may take several minutes — wait patiently.
 
 ### Step 5 — Cherry-pick onto each target branch
 
-For each target branch (e.g. `Releases/CloudV22`):
+For each target branch (e.g. `release/1.x`):
 
 ```bash
 git checkout -b backport/<pr-number>-to-<short-branch> origin/<target-branch>
@@ -75,8 +83,8 @@ If cherry-pick has **conflicts**:
 A clean loop for multiple branches:
 
 ```bash
-for branch in CloudV22 CloudV23 CloudV24; do
-  git checkout -b backport/<pr-number>-to-$branch origin/Releases/$branch && \
+for branch in 1.x 2.x 3.x; do
+  git checkout -b backport/<pr-number>-to-$branch origin/release/$branch && \
   git cherry-pick <sha> && \
   git push origin backport/<pr-number>-to-$branch && \
   git checkout master || { echo "FAILED: $branch"; break; }
@@ -85,20 +93,24 @@ done
 
 ### Step 6 — Open backport PRs
 
-For each successfully pushed branch, use `mcp_github_create_pull_request`:
+For each successfully pushed branch, create the PR with `gh pr create`:
 
-- **title**: `[Backport <target-branch>] <original PR title>`
-- **head**: `backport/<pr-number>-to-<short-branch>`
-- **base**: `<target-branch>`
-- **body**:
-  ```
-  Backport of #<pr-number> to `<target-branch>`.
+```bash
+gh pr create --repo <owner>/<repo> \
+  --base <target-branch> \
+  --head backport/<pr-number>-to-<short-branch> \
+  --title "[Backport <target-branch>] <original PR title>" \
+  --body "<body>"
+```
 
-  **Original PR:** #<pr-number> — <title>
-  **Change:** <one-line summary of what changed>
+The body:
 
-  <!-- AGENTIC-WATERMARK team:.squad agents:coordinator repo:<owner>/<repo> -->
-  ```
+```
+Backport of #<pr-number> to `<target-branch>`.
+
+**Original PR:** #<pr-number> — <title>
+**Change:** <one-line summary of what changed>
+```
 
 Report each created PR URL to the user.
 
@@ -118,4 +130,4 @@ Confirm cleanup to the user.
 - **Commit not found locally**: The PR head SHA may not exist; always find the commit via `git log origin/<base-branch>` matching `(#N)`.
 - **Conflicts**: Report conflicting files and ask the user before skipping a target branch.
 - **LFS repos**: HTTPS clone may be slow (multi-GB); inform the user and wait.
-- **Branch naming**: Use `backport/<pr-number>-to-<short-name>` (e.g. `backport/53-to-CloudV22`).
+- **Branch naming**: Use `backport/<pr-number>-to-<short-name>` (e.g. `backport/123-to-1.x`).

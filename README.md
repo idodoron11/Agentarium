@@ -10,7 +10,7 @@ Whether you’re experimenting with prompt engineering, creating custom agents, 
 
 ## Shared skill resources
 
-Some skills share a resource file (e.g. `PLATFORMS.md`). The single source lives in `shared/`, and `scripts/sync-shared.sh` copies it into each skill folder that uses it, so every skill stays self-contained when installed on its own ([ADR 0001](docs/adr/0001-shared-skill-resources-are-generated-copies.md)). Edit only the file in `shared/`, never a copy.
+Some skills share a resource file (e.g. `PLATFORMS.md`). The single source lives in `shared/`, and `scripts/sync-shared.sh` copies it into each skill folder that uses it, so every skill stays self-contained when installed on its own ([ADR 0001](docs/adr/0001-shared-skill-resources-are-generated-copies.md)). Edit only the file in `shared/`, never a copy. Mappings name a skill; the script finds it under `skills/` or `skills/.experimental/`.
 
 Enable the pre-commit hook once per clone to regenerate the copies automatically:
 
@@ -23,3 +23,7 @@ CI runs `scripts/sync-shared.sh --check` and fails when a copy is out of date.
 ## Versioning
 
 Every push to `main` releases a new `vX.Y.0` tag and GitHub Release for the whole repo. A `feat` or breaking change (`!` / `BREAKING CHANGE`) bumps the major version; anything else bumps the minor version. PR titles must be Conventional Commits, and PRs are squash-merged. See [ADR 0003](docs/adr/0003-every-push-to-main-is-a-major-or-minor-release.md).
+
+## Unpublished skills
+
+Skills not offered by default live in `skills/.experimental/<name>/` and set `metadata.internal: true` ([ADR 0002](docs/adr/0002-unpublished-skills-live-in-experimental-and-are-internal.md)). `npx skills add idodoron11/Agentarium` skips them; install one explicitly with `-s <name>` (currently `refactor`, `mypy-check`, `daily-standup`).

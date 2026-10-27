@@ -19,3 +19,7 @@ git config core.hooksPath .githooks
 ```
 
 CI runs `scripts/sync-shared.sh --check` and fails when a copy is out of date.
+
+## Versioning
+
+Every push to `main` releases a new `vX.Y.0` tag and GitHub Release for the whole repo. A `feat` or breaking change (`!` / `BREAKING CHANGE`) bumps the major version; anything else bumps the minor version. PR titles must be Conventional Commits, and PRs are squash-merged. See [ADR 0003](docs/adr/0003-every-push-to-main-is-a-major-or-minor-release.md).

@@ -22,6 +22,10 @@ CI runs `scripts/sync-shared.sh --check` and fails when a copy is out of date.
 
 The same hook and CI also run the skill checker, `scripts/check-skills.sh --check [root]`, which prints one line per violation and exits non-zero if any are found. It keeps every skill installable and every Published skill Portable: the frontmatter `name` equals the folder name, every relative link stays inside the skill's folder, Published skills contain no agent install paths (`.github/skills/`, `.claude/skills/`) or `mcp_` tool names (the generated shared copies are exempt), and `metadata.internal: true` is set exactly on skills under `.experimental`. CI also runs the checker's fixture tests, `tests/check-skills.test.sh`.
 
+## Versioning
+
+Every push to `main` releases a new `vX.Y.0` tag and GitHub Release for the whole repo. A `feat` or breaking change (`!` / `BREAKING CHANGE`) bumps the major version; anything else bumps the minor version. PR titles must be Conventional Commits, and PRs are squash-merged. See [ADR 0003](docs/adr/0003-every-push-to-main-is-a-major-or-minor-release.md).
+
 ## Unpublished skills
 
 Skills not offered by default live in `skills/.experimental/<name>/` and set `metadata.internal: true` ([ADR 0002](docs/adr/0002-unpublished-skills-live-in-experimental-and-are-internal.md)). `npx skills add idodoron11/Agentarium` skips them; install one explicitly with `-s <name>` (currently `refactor`, `mypy-check`, `daily-standup`).

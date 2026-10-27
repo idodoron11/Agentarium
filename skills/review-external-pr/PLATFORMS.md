@@ -6,7 +6,7 @@ Per-platform recipes for reading a pull request and working its review threads o
 
 ## Choosing a tier
 
-Each platform section lists **tiers** in order: CLI → MCP → guidance. Use the first tier whose **Check** passes. A tier that is present but fails its check (unauthenticated, missing extension, wrong org) is misconfigured: fall through to the next tier, and if none works, give the user the guidance for the failing tier and stop.
+Each platform section lists **tiers** in order: CLI, then MCP where the platform has one, then guidance. Use the first tier whose **Check** passes. A tier that is present but fails its check (unauthenticated, missing extension, wrong org) is misconfigured: fall through to the next tier, and if none works, give the user the guidance for the failing tier and stop.
 
 MCP tool names carry a harness-specific prefix (`mcp_github_…`, `github-…`, `mcp__github__…`); match on the suffix given here.
 
@@ -18,12 +18,12 @@ The **signer** is the name of the agent product running the skill (e.g. `Copilot
 
 Skills close or reopen threads through these operations:
 
-| Operation | GitHub | Azure DevOps (CLI / MCP) |
+| Operation | GitHub | Azure DevOps |
 |---|---|---|
-| Close as fixed | resolve | `fixed` / `Fixed` |
-| Close as by design | resolve | `byDesign` / `ByDesign` |
-| Close as won't fix | resolve | `wontFix` / `WontFix` |
-| Reopen | unresolve | `active` / `Active` |
+| Close as fixed | resolve | `fixed` |
+| Close as by design | resolve | `byDesign` |
+| Close as won't fix | resolve | `wontFix` |
+| Reopen | unresolve | `active` |
 
 An **open** thread is unresolved on GitHub, and `active` or `pending` on Azure DevOps.
 
@@ -75,6 +75,8 @@ URL: `github.com/<owner>/<repo>/pull/<n>`.
 
 URL: `dev.azure.com/<org>/<project>/_git/<repo>/pullrequest/<n>`; `<org>.visualstudio.com/<project>/_git/<repo>/pullrequest/<n>` is the same. Pass `--org https://dev.azure.com/<org> --detect false` on every `az` call so the local git remote is ignored.
 
+Azure DevOps runs on `az` alone: the Azure DevOps MCP server (v2.9 onward) returns no PR diff, so it has no tier here.
+
 ### Tier 1 — `az` CLI with the `azure-devops` extension
 
 **Check**: `az extension show --name azure-devops` succeeds, `az account show` succeeds, and `az repos pr show --id <n>` returns the PR. A 401/403 or "TF400813" means the signed-in account lacks access to that org — misconfigured.
@@ -100,19 +102,6 @@ URL: `dev.azure.com/<org>/<project>/_git/<repo>/pullrequest/<n>`; `<org>.visuals
 
 Delete the temp files afterwards.
 
-### Tier 2 — Azure DevOps MCP server
-
-**Check**: a `repo_pull_request` tool exists and returns the PR (`action: get`).
-
-**Read**: `repo_pull_request` with `action: get` and `includeChangedFiles: true` for metadata (head branch `sourceRefName`, head and target commits) and the changed files; `repo_file` with `action: get_content`, `version` and `versionType` for a file at a ref. This tier has no diff call: diff each changed file by reading it at the target and head commits. It has no identity lookup either.
-
-Servers before v2.9 expose one tool per operation instead (`repo_get_pull_request_by_id`, `repo_get_pull_request_changes` for the diff, `repo_get_file_content`, `repo_list_pull_request_threads`, `repo_reply_to_comment`, `repo_update_pull_request_thread`); use them when the consolidated tools are absent.
-
-**Threads**: `repo_pull_request_thread` with `action: list` and `fullResponse: true` (threads, status, comments with authors); filter with `status` to fetch only one status.
-
-**Thread replies**: `repo_pull_request_thread_write` with `action: reply` (`threadId`, `content`), and `action: update_status` with `status` from *Thread status*.
-
-### Tier 3 — guidance
+### Tier 2 — guidance
 
 - Install the Azure CLI (https://aka.ms/installazurecli), then `az extension add --name azure-devops` and `az login` with an account in `<org>`. For a tenant-specific org: `az login --tenant <tenantId>`.
-- Or configure the Azure DevOps MCP server (https://github.com/microsoft/azure-devops-mcp) in the harness's MCP settings for `<org>`.

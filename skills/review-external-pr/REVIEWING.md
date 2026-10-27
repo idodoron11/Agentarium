@@ -4,11 +4,11 @@ Review-only recipes that extend [PLATFORMS.md](PLATFORMS.md): posting a review, 
 
 ## Verdict mapping
 
-| Verdict | GitHub review `event` | Azure DevOps vote (CLI / MCP) |
+| Verdict | GitHub review `event` | Azure DevOps vote |
 |---|---|---|
-| Approve | `APPROVE` | `approve-with-suggestions` / `ApprovedWithSuggestions` if any inline comment was posted, else `approve` / `Approved` |
-| Comment | `COMMENT` | no vote; `reset` / `NoVote` if your account already voted |
-| Request changes | `REQUEST_CHANGES` | `wait-for-author` / `WaitingForAuthor` |
+| Approve | `APPROVE` | `approve-with-suggestions` if any inline comment was posted, else `approve` |
+| Comment | `COMMENT` | no vote; `reset` if your account already voted |
+| Request changes | `REQUEST_CHANGES` | `wait-for-author` |
 
 On GitHub a `COMMENT` review leaves your earlier `APPROVE` or `REQUEST_CHANGES` in effect; a later `APPROVE` or `REQUEST_CHANGES` replaces it.
 
@@ -81,9 +81,3 @@ Then cast the vote from the mapping (for Comment, only when resetting an earlier
 - Latest verdict: your entry in `reviewers[]` from `az repos pr show` (`vote`: 10 approve, 5 approve with suggestions, -5 wait for author, -10 reject).
 - Iterations: `az devops invoke --area git --resource pullRequestIterations --route-parameters project=<project> repositoryId=<repoId> pullRequestId=<n> --api-version 7.1` → `id`, `sourceRefCommit.commitId`, `createdDate`. Baseline: the commit of the latest iteration created before your latest comment. A vote-only earlier round leaves no timestamp: use the full diff.
 - Delta, in the temp clone: use the delta only when `git merge-base --is-ancestor <baseline> <head>` succeeds and `git rev-list --merges <baseline>..<head>` is empty; then `git diff <baseline> <head>`.
-
-### Tier 2 — Azure DevOps MCP server
-
-**Post**: `repo_pull_request_thread_write` with `action: create` per finding (`filePath`, `rightFileStartLine`, `rightFileEndLine` + `rightFileEndOffset`); then one thread without file context for the summary. Cast the vote with `repo_pull_request_write`, `action: vote`, `vote` from the mapping. If the vote fails, record it and give the user the `az repos pr set-vote` command or the web UI's Approve menu. Servers before v2.9 use `repo_create_pull_request_thread` and `repo_vote_pull_request` instead.
-
-**History** (re-review): `repo_pull_request` with `action: get` for your vote in the reviewers. This tier has no iteration lookup: reuse a baseline from this session, else use the full diff. Without an identity lookup, previous threads are those whose first comment carries your signer line.

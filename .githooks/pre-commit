@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Regenerates shared skill resources and stages the copies. Enable with: git config core.hooksPath .githooks
+# Regenerates shared skill resources and stages the copies, then blocks the commit if any skill is invalid. Enable with: git config core.hooksPath .githooks
 set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
@@ -7,3 +7,5 @@ ROOT="$(git rev-parse --show-toplevel)"
     echo "pre-commit: regenerated $path"
     git -C "$ROOT" add -- "$path"
 done
+
+"$ROOT/scripts/check-skills.sh" --check

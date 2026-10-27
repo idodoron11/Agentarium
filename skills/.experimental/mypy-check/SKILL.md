@@ -2,6 +2,8 @@
 name: mypy-check
 description: 'Run mypy type checking on a specific file or folder using the project mypy config. Use when: finding type errors, checking type annotations, reviewing mypy output, diagnosing type issues, running strict type checking on a module or path.'
 argument-hint: File or folder path to type-check (e.g., tracks/local_track.py, matchers/)
+metadata:
+  internal: true
 ---
 
 # Mypy Check

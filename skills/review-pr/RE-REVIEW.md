@@ -4,10 +4,10 @@ Re-review branch of [SKILL.md](SKILL.md): the author has responded to an earlier
 
 ## Step 3 — Fetch history
 
-Collect, through the chosen tier ([PLATFORMS.md](PLATFORMS.md) *Threads*, [REVIEWING.md](REVIEWING.md) *History*):
+Collect, through the chosen tier ([PLATFORMS.md](PLATFORMS.md) *Threads*, [REVIEWING.md](REVIEWING.md) *History*), reusing the threads fetched in SKILL.md Step 2:
 
 - **Previous threads**: every thread whose first comment is by your account, whatever its status (open, resolved, outdated). For each, record: thread id, `file:line`, the original comment, every reply after it, and its platform status. Take severity and **Blocks** from the posted header (`🟡 **IMPORTANT — Quality (blocking): …**`; 🔴 always blocks, 🟢 never does). When the header is absent (a comment you wrote by hand), infer both and mark them *(inferred)*.
-- **Other reviewers' open threads** and the PR conversation comments: context for the author's changes.
+- **PR conversation comments**: with other reviewers' threads, context for the author's changes.
 - **Your latest verdict** on the PR, and the **round number**: your earlier review rounds + 1.
 - **Baseline**: the PR head commit at the time of your latest review round. When this session ran and posted that round, reuse its head SHA; otherwise use the platform-recorded baseline.
 - **Delta**: the diff from baseline to the current head. Fall back to the **full diff** when the baseline is unknown, is not an ancestor of the head (rebase, force-push), or the range contains a merge commit (the base branch was merged in). Record the reason.
@@ -30,8 +30,9 @@ A contested dismissal of a 🔴 finding blocks; flag it in the draft so the user
 
 **Find new findings** with the SKILL.md rubric, scoped to:
 - lines in the **delta**, at every severity;
-- 🔴 issues anywhere in the PR, tagged *outside delta*;
-- an open 🔴 thread by another reviewer that you agree with and no previous thread covers: raise it as your own finding, crediting them.
+- 🔴 issues anywhere in the PR, tagged *outside delta*.
+
+Other reviewers' threads follow the SKILL.md Step 5 rule.
 
 Done when: every previous thread has a thread outcome with a one-line justification, and every file in the delta is accounted for as yielding findings or clean.
 
@@ -56,6 +57,7 @@ Replace the initial-review table with:
 4. **New findings**: the initial-review table with a **Scope** column (*delta* / *outside delta*), each comment body in full as in SKILL.md.
 5. The summary comment, opening `Re-review (round <N>)`, then the verdict line, a count of thread outcomes (e.g. "4 resolved, 1 accepted dismissal, 1 still open"), the new-finding count, and `*Reviewed by <signer>*`.
 6. The suggested verdict with its rationale, naming blocking items by number.
+7. **Answers**, as in SKILL.md.
 
 The user may drop or edit replies and change thread outcomes, as with findings.
 

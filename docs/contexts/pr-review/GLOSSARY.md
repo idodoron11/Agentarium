@@ -24,6 +24,20 @@ _Avoid_: Last reviewed commit, base (which means the target branch)
 The changes between the baseline and the current PR head.
 _Avoid_: Incremental diff, interdiff, limited diff
 
+**Provisional PR**:
+A PR its author has flagged as not final: marked draft, described as WIP, or announced to be split or replaced.
+_Avoid_: Draft PR (which names only the platform flag)
+
+## Reading
+
+**Fan-out**:
+Reading a large PR through parallel read-only subagents, one per module batch, while the reviewer keeps every judgement that spans the PR.
+_Avoid_: Parallel review, split review
+
+**Coverage**:
+How fully the reviewer read a changed file when reading without fan-out: read, skimmed, or not read.
+_Avoid_: Read status, progress
+
 ## Findings and threads
 
 **Finding**:

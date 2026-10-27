@@ -21,9 +21,9 @@ Done when: a read call through the chosen tier returned the PR's metadata, or th
 
 ## Step 2 — Fetch the PR
 
-Through the chosen tier, retrieve: title, description, state, author, the authenticated account, base branch, head commit SHA, the list of changed files, and the full diff. A merged, closed, or abandoned PR ends the run with a one-line note.
+Through the chosen tier, retrieve: title, description, state, draft flag, author, the authenticated account, base branch, head commit SHA, the list of changed files, the full diff, and every review thread on the PR from any author, bots included, with its status and comments (PLATFORMS.md *Threads*). A merged, closed, or abandoned PR ends the run with a one-line note.
 
-Done when: you hold a diff for every changed file in the list.
+Done when: you hold a diff for every changed file in the list and the full thread list.
 
 ## Step 3 — Decide the round
 
@@ -49,9 +49,11 @@ Done when: every candidate path has been probed and you can list the standards y
 
 ## Step 5 — Analyze
 
-On a re-review, judge previous threads and scope new findings per RE-REVIEW.md; the rubric and the reading discipline below still apply.
+On a re-review, judge previous threads and scope new findings per RE-REVIEW.md; the rubric and the reading discipline below still apply. When the diff you read (the delta on a re-review) exceeds 2,000 lines or 30 files, open [LARGE-PR.md](LARGE-PR.md) and read through its fan-out instead of inline.
 
 Read every changed file in full at the head commit, not only its hunks. Judge each change against the rubric below and against every standard from Step 4. Anchor each finding to one line (or a line range) present in the diff: right side for added/changed code, left side for removed code.
+
+A finding that an existing thread from another author already raises, open or resolved, is theirs: drop it. The one exception is an open 🔴 thread you agree with: raise it as your own finding and credit them.
 
 ### Rubric
 
@@ -63,7 +65,9 @@ Read every changed file in full at the head commit, not only its hunks. Judge ea
 
 Also check the PR for **incomplete implementation**: work the description promises that the diff lacks, or stubs and TODOs left in new code paths. Record each as a finding.
 
-Done when: every changed file and every standard is accounted for, each either yielding findings or noted as clean, and every 🟡 finding carries a merge-blocking judgement.
+Collect every **question** the description asks, of the reviewer or of anyone, that your account has not already answered on the PR, and draft an answer to each. An answer is your opinion posted under the user's name, so it stays separate from findings and the summary.
+
+Done when: every changed file and every standard is accounted for, each either yielding findings or noted as clean, every 🟡 finding carries a merge-blocking judgement, and every question in the description has a drafted answer.
 
 ### Verdict
 
@@ -72,6 +76,7 @@ Three verdicts exist: **Approve**, **Comment** (comments only, no vote), **Reque
 - Suggest **Comment** when the draft holds any 🔴 finding, any merge-blocking 🟡 finding, or an incomplete implementation.
 - Otherwise suggest **Approve**; the inline comments then go out as optional suggestions.
 - On a **self-authored** PR (author is the account the tier is authenticated as), GitHub accepts only Comment: offer Comment and say why.
+- On a PR that is **provisional** (the draft flag is set, or the description calls it a draft or WIP, or says it will be split or replaced), name that next to the suggested verdict and offer Comment as an equal option.
 - On a re-review, the verdict covers the blocking set defined in RE-REVIEW.md.
 
 ## Step 6 — Present the draft
@@ -98,10 +103,21 @@ Show the user the full draft; post nothing yet. On a re-review, use the RE-REVIE
 
 3. The summary comment in full: a verdict line (on Approve: "Approved — inline comments are non-blocking suggestions"; on Comment: "Not ready to merge yet — see blocking findings"; on Request changes: "Changes requested — see blocking findings"); 1–3 sentences on what the PR does and whether it is sound; a **What's good** bullet list; the finding count (e.g. "1 critical, 2 important, 1 suggestion — see inline comments"); ending with `*Reviewed by <signer>*`.
 4. The suggested verdict with a one-line rationale naming the blocking findings by number, if any.
+5. **Answers**, numbered `A1`, `A2`, …: each question quoted, then its drafted answer. Kept answers are posted together as one conversation comment:
 
-Then ask the user to approve, drop findings by number, edit text, line, or severity, or override the verdict.
+   ```
+   **Answers to questions in the description**
 
-Done when: every finding, the summary, and the suggested verdict are on screen in full, and the user has been asked to decide.
+   > <question>
+
+   <answer>
+
+   *Answered by <signer>*
+   ```
+
+Then ask the user to approve, drop findings or answers by number, edit text, line, or severity, or override the verdict.
+
+Done when: every finding, every answer, the summary, and the suggested verdict are on screen in full, and the user has been asked to decide.
 
 ## Step 7 — Confirm
 
@@ -113,10 +129,10 @@ Done when: the user has explicitly approved both the current approved set and th
 
 On a re-review, post replies and thread status changes first, per RE-REVIEW.md.
 
-Post the approved set through the chosen tier, exactly as approved, following the *Post* recipe and *Verdict mapping* in REVIEWING.md: one inline comment per finding, the summary comment, and the confirmed verdict. If a comment fails to post (e.g. its line is outside the diff), keep posting the rest and record the failure.
+Post the approved set through the chosen tier, exactly as approved, following the *Post* recipe and *Verdict mapping* in REVIEWING.md: one inline comment per finding, the summary comment, and the confirmed verdict. If a comment fails to post (e.g. its line is outside the diff), keep posting the rest and record the failure. Then check every posted inline comment per REVIEWING.md *Verify anchors* where your tier has it, and post the kept answers per *Answers*.
 
-Done when: every comment in the approved set was posted or recorded as failed, and the verdict was submitted or recorded as failed.
+Done when: every comment in the approved set was posted and verified anchored, or recorded as failed; the answers comment, if any answers were kept, was posted or recorded as failed; and the verdict was submitted or recorded as failed.
 
 ## Step 9 — Report
 
-Reply with the PR link, the round, the verdict submitted, the number of comments posted (inline + summary, plus replies and status changes on a re-review), any failures with their text (or the vote command) so the user can finish by hand, and a one-line summary of the most important finding.
+Reply with the PR link, the round, the verdict submitted, the number of comments posted (inline + summary + answers, plus replies and status changes on a re-review), any failures with their text (or the vote command) so the user can finish by hand, and a one-line summary of the most important finding.

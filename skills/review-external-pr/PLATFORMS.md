@@ -4,6 +4,14 @@ Per-platform recipes for [SKILL.md](SKILL.md). Read only the section for the PR'
 
 MCP tool names carry a harness-specific prefix (`mcp_github_…`, `github-…`, `mcp__github__…`); match on the suffix given here.
 
+## Verdict mapping
+
+| Verdict | GitHub review `event` | Azure DevOps vote |
+|---|---|---|
+| Approve | `APPROVE` | `approve-with-suggestions` if any inline comment was posted, else `approve` |
+| Comment | `COMMENT` | no vote |
+| Request changes | `REQUEST_CHANGES` | `wait-for-author` |
+
 ## GitHub
 
 ### Tier 1 — `gh` CLI
@@ -12,16 +20,17 @@ MCP tool names carry a harness-specific prefix (`mcp_github_…`, `github-…`, 
 
 **Read**:
 - Metadata: `gh pr view <url> --json title,body,author,baseRefName,headRefOid,files`
+- Authenticated user (self-authored check): `gh api user --jq .login`, compared with `author.login`
 - Diff: `gh pr diff <url>`
 - File at a ref: `gh api "repos/<owner>/<repo>/contents/<path>?ref=<ref>" -H "Accept: application/vnd.github.raw"`
 - Directory listing: `gh api "repos/<owner>/<repo>/contents/<dir>?ref=<ref>" --jq '.[].path'` (404 → path absent)
 
-**Post** — one call creates the whole review with its inline comments. Write the payload to a temp file and send it:
+**Post** — one call creates the whole review with its inline comments and the verdict (`event` from the mapping above). Write the payload to a temp file and send it:
 
 ```json
 {
   "commit_id": "<headRefOid>",
-  "event": "COMMENT",
+  "event": "<APPROVE | COMMENT | REQUEST_CHANGES>",
   "body": "<summary comment>",
   "comments": [
     { "path": "src/a.ts", "line": 42, "side": "RIGHT", "body": "<comment>" },
@@ -38,9 +47,9 @@ A 422 means at least one comment is anchored outside the diff and the whole revi
 
 **Check**: a `pull_request_read` tool exists and returns the PR (`method: get`).
 
-**Read**: `pull_request_read` with `get`, `get_diff`, `get_files`; `get_file_contents` with `ref` = base branch for standards.
+**Read**: `pull_request_read` with `get`, `get_diff`, `get_files`; `get_file_contents` with `ref` = base branch for standards; `get_me` for the self-authored check.
 
-**Post**: `pull_request_review_write` with `method: create` and `commitID` = head SHA (omit `event`, which opens a pending review) → `add_comment_to_pending_review` per finding (`path`, `line`, `side`, `startLine`/`startSide` for ranges, `subjectType: LINE`) → `pull_request_review_write` with `method: submit_pending`, `event: COMMENT`, `body` = summary.
+**Post**: `pull_request_review_write` with `method: create` and `commitID` = head SHA (omit `event`, which opens a pending review) → `add_comment_to_pending_review` per finding (`path`, `line`, `side`, `startLine`/`startSide` for ranges, `subjectType: LINE`) → `pull_request_review_write` with `method: submit_pending`, `event` = the mapped verdict, `body` = summary.
 
 ### Tier 3 — guidance
 
@@ -85,13 +94,15 @@ Use `leftFileStart`/`leftFileEnd` instead for findings on removed lines.
 
 `az devops invoke --area git --resource pullRequestThreads --route-parameters project=<project> repositoryId=<repoId> pullRequestId=<n> --http-method POST --in-file thread.json --api-version 7.1`
 
+Then cast the vote from the mapping (skip for Comment): `az repos pr set-vote --id <n> --vote <value>`. A branch policy can forbid authors from voting on their own PR; record that as a failed verdict.
+
 ### Tier 2 — Azure DevOps MCP server
 
 **Check**: a `repo_get_pull_request_by_id` / `repo_pull_request` tool exists and returns the PR.
 
 **Read**: the pull-request tool for metadata; `repo_get_pull_request_changes` (or the equivalent changes call) for the diff; `repo_get_file_content` / `repo_file` with the target branch for standards.
 
-**Post**: `repo_create_pull_request_thread` / `repo_pull_request_thread_write` per finding with `filePath`, `rightFileStartLine`, `rightFileEndLine`; then one thread without file context for the summary.
+**Post**: `repo_create_pull_request_thread` / `repo_pull_request_thread_write` per finding with `filePath`, `rightFileStartLine`, `rightFileEndLine`; then one thread without file context for the summary. Cast the vote with a reviewer-vote tool if one exists (e.g. `repo_update_pull_request_reviewers` / `repo_pull_request_write` with a vote); otherwise record the verdict as failed and give the user the `az repos pr set-vote` command or the web UI's Approve menu.
 
 ### Tier 3 — guidance
 

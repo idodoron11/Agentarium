@@ -23,7 +23,7 @@ report() {
     violations=1
 }
 
-shown() {
+display_path() {
     echo "${1#"$ROOT/"}"
 }
 
@@ -41,7 +41,7 @@ check_name() {
     local skill="$1" name
     name="$(frontmatter_name "$skill/SKILL.md")"
     if [ "$name" != "$(basename "$skill")" ]; then
-        report "$(shown "$skill/SKILL.md"): name \"$name\" does not match folder \"$(basename "$skill")\""
+        report "$(display_path "$skill/SKILL.md"): name \"$name\" does not match folder \"$(basename "$skill")\""
     fi
 }
 
@@ -57,9 +57,9 @@ is_internal() {
 check_internal_flag() {
     local skill="$1" published="$2"
     if [ "$published" = true ] && is_internal "$skill/SKILL.md"; then
-        report "$(shown "$skill/SKILL.md"): Published skill must not set metadata.internal"
+        report "$(display_path "$skill/SKILL.md"): Published skill must not set metadata.internal"
     elif [ "$published" = false ] && ! is_internal "$skill/SKILL.md"; then
-        report "$(shown "$skill/SKILL.md"): Unpublished skill must set metadata.internal: true"
+        report "$(display_path "$skill/SKILL.md"): Unpublished skill must set metadata.internal: true"
     fi
 }
 
@@ -105,12 +105,12 @@ check_links() {
             target="${target%%\?*}"
             case "$target" in
                 ""|[A-Za-z]*:*) continue ;;
-                /*) report "$(shown "$file"):$line: link escapes the skill folder: $target"; continue ;;
+                /*) report "$(display_path "$file"):$line: link escapes the skill folder: $target"; continue ;;
             esac
             if ! resolved="$(resolve_in_skill "$reldir/$target")"; then
-                report "$(shown "$file"):$line: link escapes the skill folder: $target"
+                report "$(display_path "$file"):$line: link escapes the skill folder: $target"
             elif [ ! -e "$skill/$resolved" ]; then
-                report "$(shown "$file"):$line: link target not found: $target"
+                report "$(display_path "$file"):$line: link target not found: $target"
             fi
         done < <(markdown_links "$file")
     done < <(find "$skill" -type f -name '*.md' | sort)
@@ -121,34 +121,37 @@ is_generated_copy() {
     head -n 1 "$1" | grep -q '^<!-- Generated from shared/'
 }
 
-# report_matches <file> <fixed string> <message>
+# report_matches <file> <extended regex> <message>
 report_matches() {
-    local file="$1" needle="$2" message="$3" line
+    local file="$1" pattern="$2" message="$3" line
     while IFS=: read -r line _; do
-        report "$(shown "$file"):$line: $message"
-    done < <(grep -n -I -F -e "$needle" "$file" || true)
+        report "$(display_path "$file"):$line: $message"
+    done < <(grep -n -I -E -e "$pattern" "$file" || true)
 }
 
 check_portable() {
     local file
     while IFS= read -r file; do
         is_generated_copy "$file" && continue
-        report_matches "$file" ".github/skills/" "Published skill uses agent install path .github/skills/"
-        report_matches "$file" ".claude/skills/" "Published skill uses agent install path .claude/skills/"
-        report_matches "$file" "mcp_" "Published skill uses an mcp_ tool name"
+        report_matches "$file" '\.github/skills/' "Published skill uses agent install path .github/skills/"
+        report_matches "$file" '\.claude/skills/' "Published skill uses agent install path .claude/skills/"
+        report_matches "$file" '(^|[^[:alnum:]_])mcp_' "Published skill uses an mcp_ tool name"
     done < <(find "$1" -type f | sort)
 }
 
 # check_skill <skill folder> <true when Published, false when under .experimental>
 check_skill() {
-    if [ ! -f "$1/SKILL.md" ]; then
-        report "$(shown "$1"): missing SKILL.md"
+    local skill="$1" published="$2"
+    if [ ! -f "$skill/SKILL.md" ]; then
+        report "$(display_path "$skill"): missing SKILL.md"
         return
     fi
-    check_name "$1"
-    check_internal_flag "$1" "$2"
-    check_links "$1"
-    [ "$2" = false ] || check_portable "$1"
+    check_name "$skill"
+    check_internal_flag "$skill" "$published"
+    check_links "$skill"
+    if [ "$published" = true ]; then
+        check_portable "$skill"
+    fi
 }
 
 for skill in "$ROOT"/skills/*/ "$ROOT"/skills/.experimental/*/; do

@@ -42,6 +42,7 @@ expect_check published-internal 1 \
     'skills/flagged/SKILL.md: Published skill must not set metadata.internal'
 expect_check mcp-name 1 \
     'skills/tooly/SKILL.md:8: Published skill uses an mcp_ tool name'
+expect_check mcp-word-boundary 0
 expect_check install-path 1 \
     'skills/pathy/SKILL.md:8: Published skill uses agent install path .claude/skills/'
 expect_check generated-exempt 0

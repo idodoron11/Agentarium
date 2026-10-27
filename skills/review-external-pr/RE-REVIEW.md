@@ -1,6 +1,6 @@
 # Re-review
 
-Re-review branch of [SKILL.md](SKILL.md): the author has responded to an earlier review round by your account. Each section below extends the SKILL.md step it names. Terms (baseline, delta, previous thread, thread outcome, dismissal) are defined in the repo's [GLOSSARY.md](../../GLOSSARY.md).
+Re-review branch of [SKILL.md](SKILL.md): the author has responded to an earlier review round by your account. Each section below extends the SKILL.md step it names.
 
 ## Step 3 — Fetch history
 
@@ -9,7 +9,7 @@ Collect, through the chosen tier ([PLATFORMS.md](PLATFORMS.md), *History* recipe
 - **Previous threads**: every thread whose first comment is by your account, whatever its status (open, resolved, outdated). For each, record: thread id, `file:line`, the original comment, every reply after it, and its platform status. Take severity and **Blocks** from the posted header (`🟡 **IMPORTANT — Quality (blocking): …**`; 🔴 always blocks, 🟢 never does). When the header is absent (a comment you wrote by hand), infer both and mark them *(inferred)*.
 - **Other reviewers' open threads** and the PR conversation comments: context for the author's changes.
 - **Your latest verdict** on the PR, and the **round number**: your earlier review rounds + 1.
-- **Baseline**: when this session ran and posted the previous round, reuse its head SHA. Otherwise use the platform-recorded baseline.
+- **Baseline**: the PR head commit at the time of your latest review round. When this session ran and posted that round, reuse its head SHA; otherwise use the platform-recorded baseline.
 - **Delta**: the diff from baseline to the current head. Fall back to the **full diff** when the baseline is unknown, is not an ancestor of the head (rebase, force-push), or the range contains a merge commit (the base branch was merged in). Record the reason.
 
 Done when: every previous thread carries severity, Blocks, replies and status; the baseline is a SHA or a recorded fallback reason; and you hold the delta (or full diff) for every file it touches.

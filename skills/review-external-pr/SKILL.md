@@ -9,7 +9,7 @@ disable-model-invocation: true
 
 Review the pull request at the URL the user provided. The run has two halves: build a **draft** review locally (findings plus a suggested **verdict**), then post only the **approved set** and the confirmed verdict once the user signs off.
 
-Each run is one **review round**: an **initial review**, or a **re-review** after the author responded to an earlier round. Step 3 decides which. Terms are defined in the repo's [GLOSSARY.md](../../GLOSSARY.md).
+Each run is one **review round**: an **initial review**, or a **re-review** after the author responded to an earlier round. Step 3 decides which.
 
 **Signer**: the name of the agent product running this skill (e.g. `Copilot`, `Claude Code`, `Cursor`). Every posted comment ends with `*Reviewed by <signer>*`.
 

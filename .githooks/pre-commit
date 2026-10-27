@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Regenerates shared skill resources and stages the copies. Enable with: git config core.hooksPath .githooks
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+"$ROOT/scripts/sync-shared.sh" | while read -r _ path; do
+    echo "pre-commit: regenerated $path"
+    git -C "$ROOT" add -- "$path"
+done

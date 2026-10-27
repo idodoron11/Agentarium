@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Copies each shared resource into the skill folders that use it, so every skill stays self-contained.
+# See docs/adr/0001-shared-skill-resources-are-generated-copies.md.
+# Usage: scripts/sync-shared.sh [--check]
+#   --check   exit 1 if any generated copy is missing or differs from its source; write nothing
+
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# "<source under shared/> <skill folder under skills/>", one pair per line.
+MAPPINGS="
+PLATFORMS.md review-external-pr
+PLATFORMS.md triage-pr-comments
+"
+
+check=false
+case "${1:-}" in
+    --check) check=true ;;
+    "") ;;
+    *) echo "Usage: $0 [--check]" >&2; exit 2 ;;
+esac
+
+render() {
+    printf '<!-- Generated from shared/%s by scripts/sync-shared.sh. Do not edit; edit the source and re-run the script. -->\n\n' "$1"
+    cat "$ROOT/shared/$1"
+}
+
+stale=0
+while read -r source skill; do
+    [ -z "$source" ] && continue
+    target="$ROOT/skills/$skill/$source"
+    if [ ! -d "$ROOT/skills/$skill" ]; then
+        echo "Missing skill folder: skills/$skill" >&2
+        exit 1
+    fi
+    if render "$source" | cmp -s - "$target"; then
+        continue
+    fi
+    if [ "$check" = true ]; then
+        echo "Out of date: skills/$skill/$source (run scripts/sync-shared.sh)" >&2
+        stale=1
+    else
+        render "$source" > "$target"
+        echo "Updated: skills/$skill/$source"
+    fi
+done <<< "$MAPPINGS"
+
+exit "$stale"

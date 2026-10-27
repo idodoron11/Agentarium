@@ -39,19 +39,7 @@ Fetch the diff to understand the change scope:
 gh pr diff <pr-number> --repo <owner>/<repo>
 ```
 
-### Step 3 — Find the cherry-pick commit
-
-If the PR is **merged**, the head branch may be deleted. Find the **squash/merge commit** on the base branch:
-
-```bash
-git log --oneline origin/<base-branch> | head -10
-```
-
-Look for the commit whose message contains `(#<PR-number>)`. Note its short SHA.
-
-If the PR is **open**, use the PR's `head.sha` directly — the branch still exists and the commits are available.
-
-### Step 4 — Clone the repo via HTTPS
+### Step 3 — Clone the repo via HTTPS
 
 **Always clone via HTTPS** — SSH (port 22) may be blocked in some environments.
 
@@ -63,6 +51,18 @@ git fetch origin
 ```
 
 Large repos with LFS may take several minutes — wait patiently.
+
+### Step 4 — Find the cherry-pick commit
+
+In the clone, if the PR is **merged**, the head branch may be deleted. Find the **squash/merge commit** on the base branch:
+
+```bash
+git log --oneline origin/<base-branch> | head -10
+```
+
+Look for the commit whose message contains `(#<PR-number>)`. Note its short SHA.
+
+If the PR is **open**, use the PR's `headRefOid` directly — the branch still exists and the commits are available.
 
 ### Step 5 — Cherry-pick onto each target branch
 
@@ -127,7 +127,7 @@ Confirm cleanup to the user.
 ## Notes & Gotchas
 
 - **SSH timeout**: If `git clone git@github.com:...` hangs, switch to HTTPS immediately.
-- **Commit not found locally**: The PR head SHA may not exist; always find the commit via `git log origin/<base-branch>` matching `(#N)`.
+- **Commit not found locally**: The PR's `headRefOid` may not exist; always find the commit via `git log origin/<base-branch>` matching `(#N)`.
 - **Conflicts**: Report conflicting files and ask the user before skipping a target branch.
 - **LFS repos**: HTTPS clone may be slow (multi-GB); inform the user and wait.
 - **Branch naming**: Use `backport/<pr-number>-to-<short-name>` (e.g. `backport/123-to-1.x`).

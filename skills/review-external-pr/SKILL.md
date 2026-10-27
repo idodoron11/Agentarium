@@ -1,6 +1,6 @@
 ---
 name: review-external-pr
-description: "Review a GitHub or Azure DevOps PR from its URL, draft inline findings and a suggested verdict for your approval, then post them signed by the reviewing agent."
+description: "Review or re-review a GitHub or Azure DevOps PR from its URL, draft inline findings and a suggested verdict for your approval, then post them signed by the reviewing agent."
 argument-hint: "Full PR URL (GitHub or Azure DevOps)"
 disable-model-invocation: true
 ---
@@ -8,6 +8,8 @@ disable-model-invocation: true
 # External PR Review
 
 Review the pull request at the URL the user provided. The run has two halves: build a **draft** review locally (findings plus a suggested **verdict**), then post only the **approved set** and the confirmed verdict once the user signs off.
+
+Each run is one **review round**: an **initial review**, or a **re-review** after the author responded to an earlier round. Step 3 decides which. Terms are defined in the repo's [GLOSSARY.md](../../GLOSSARY.md).
 
 **Signer**: the name of the agent product running this skill (e.g. `Copilot`, `Claude Code`, `Cursor`). Every posted comment ends with `*Reviewed by <signer>*`.
 
@@ -21,11 +23,24 @@ Done when: a read call through the chosen tier returned the PR's metadata, or th
 
 ## Step 2 — Fetch the PR
 
-Through the chosen tier, retrieve: title, description, author (on GitHub, also the authenticated user, for the self-authored check under Verdict), base branch, head commit SHA, the list of changed files, and the full diff.
+Through the chosen tier, retrieve: title, description, state, author, the authenticated account, base branch, head commit SHA, the list of changed files, and the full diff. A merged, closed, or abandoned PR ends the run with a one-line note.
 
 Done when: you hold a diff for every changed file in the list.
 
-## Step 3 — Gather standards
+## Step 3 — Decide the round
+
+Settle initial review or re-review, first match wins:
+
+1. **The user said so**: "re-review", "they addressed my comments", or an attached handoff from an earlier round → re-review; "fresh review" or "start over" → initial review. When this contradicts rule 2, say so in one line of the draft.
+2. **Platform state**: the authenticated account has any review, vote, or thread on the PR → re-review. Otherwise → initial review, even when this session drafted an earlier round that never got posted.
+
+Session memory of an earlier round only saves fetches; it never decides the round.
+
+On a re-review, open [RE-REVIEW.md](RE-REVIEW.md) and run its *Step 3 — Fetch history*. Its sections extend Steps 5, 6, and 8 below; follow them there.
+
+Done when: the round is settled, and on a re-review, the history step's completion criterion is met.
+
+## Step 4 — Gather standards
 
 Collect every coding standard that applies, from two sources:
 
@@ -34,9 +49,11 @@ Collect every coding standard that applies, from two sources:
 
 Done when: every candidate path has been probed and you can list the standards you will apply.
 
-## Step 4 — Analyze
+## Step 5 — Analyze
 
-Read every changed file in full at the head commit, not only its hunks. Judge each change against the rubric below and against every standard from Step 3. Anchor each finding to one line (or a line range) present in the diff: right side for added/changed code, left side for removed code.
+On a re-review, judge previous threads and scope new findings per RE-REVIEW.md; the rubric and the reading discipline below still apply.
+
+Read every changed file in full at the head commit, not only its hunks. Judge each change against the rubric below and against every standard from Step 4. Anchor each finding to one line (or a line range) present in the diff: right side for added/changed code, left side for removed code.
 
 ### Rubric
 
@@ -57,16 +74,17 @@ Three verdicts exist: **Approve**, **Comment** (comments only, no vote), **Reque
 - Suggest **Comment** when the draft holds any 🔴 finding, any merge-blocking 🟡 finding, or an incomplete implementation.
 - Otherwise suggest **Approve**; the inline comments then go out as optional suggestions.
 - On a **self-authored** PR (author is the account the tier is authenticated as), GitHub accepts only Comment: offer Comment and say why.
+- On a re-review, the verdict covers the blocking set defined in RE-REVIEW.md.
 
-## Step 5 — Present the draft
+## Step 6 — Present the draft
 
-Show the user the full draft; post nothing yet.
+Show the user the full draft; post nothing yet. On a re-review, use the RE-REVIEW.md layout; the comment format below still applies to new findings.
 
 1. A numbered table: `#`, severity, `file:line`, short title, **Blocks** (yes for 🔴, incomplete implementation, and merge-blocking 🟡; no otherwise).
 2. Each inline comment body in full, under its number, in this format:
 
    ````
-   <emoji> **<Priority> — <Category>: <Short title>**
+   <emoji> **<Priority> — <Category>[ (blocking)]: <Short title>**
 
    <What is wrong and why it matters.>
 
@@ -78,6 +96,8 @@ Show the user the full draft; post nothing yet.
    *Reviewed by <signer>*
    ````
 
+   Write ` (blocking)` only on merge-blocking 🟡 findings: it lets a later re-review recover the judgement.
+
 3. The summary comment in full: a verdict line (on Approve: "Approved — inline comments are non-blocking suggestions"; on Comment: "Not ready to merge yet — see blocking findings"; on Request changes: "Changes requested — see blocking findings"); 1–3 sentences on what the PR does and whether it is sound; a **What's good** bullet list; the finding count (e.g. "1 critical, 2 important, 1 suggestion — see inline comments"); ending with `*Reviewed by <signer>*`.
 4. The suggested verdict with a one-line rationale naming the blocking findings by number, if any.
 
@@ -85,18 +105,20 @@ Then ask the user to approve, drop findings by number, edit text, line, or sever
 
 Done when: every finding, the summary, and the suggested verdict are on screen in full, and the user has been asked to decide.
 
-## Step 6 — Confirm
+## Step 7 — Confirm
 
 Apply each change the user requests and re-show the affected comments. When findings are dropped or edited, re-derive the suggested verdict and the summary's verdict line from the remaining set, unless the user has already overridden the verdict. A user override stands as given. Repeat until the user explicitly approves posting.
 
 Done when: the user has explicitly approved both the current approved set and the verdict.
 
-## Step 7 — Post
+## Step 8 — Post
+
+On a re-review, post replies and thread status changes first, per RE-REVIEW.md.
 
 Post the approved set through the chosen tier, exactly as approved, following the posting recipe in PLATFORMS.md: one inline comment per finding, the summary comment, and the confirmed verdict. If a comment fails to post (e.g. its line is outside the diff), keep posting the rest and record the failure.
 
 Done when: every comment in the approved set was posted or recorded as failed, and the verdict was submitted or recorded as failed.
 
-## Step 8 — Report
+## Step 9 — Report
 
-Reply with the PR link, the verdict submitted, the number of comments posted (inline + summary), any failures with their text (or the vote command) so the user can finish by hand, and a one-line summary of the most important finding.
+Reply with the PR link, the round, the verdict submitted, the number of comments posted (inline + summary, plus replies and status changes on a re-review), any failures with their text (or the vote command) so the user can finish by hand, and a one-line summary of the most important finding.

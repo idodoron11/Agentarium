@@ -8,6 +8,20 @@ Agentarium is a centralized repository designed for developers and AI enthusiast
 
 Whether you’re experimenting with prompt engineering, creating custom agents, or integrating AI into development pipelines, Agentarium serves as your go-to toolkit for innovation and productivity.
 
+## Installing skills
+
+Agentarium's Published skills (`review-external-pr`, `triage-pr-comments`, `pr-diff`, `cherry-pick`) install into Claude Code, GitHub Copilot, Codex, Cursor and other coding agents with [`npx skills`](https://github.com/vercel-labs/skills):
+
+```sh
+npx skills add idodoron11/Agentarium
+```
+
+* **Scope**: a project install (the default with `-y`) puts the skills in the current project (`.agents/skills/`, plus `.claude/skills/` for Claude Code). Add `-g` to install globally for your user instead (`~/.agents/skills/`, plus `~/.claude/skills/`).
+* **Coding agents**: the command asks which coding agents to install for. Name them to skip the prompt, e.g. `-a claude-code github-copilot codex cursor`. Add `-y` to skip all prompts.
+* **Updating**: `npx skills update` brings installed skills up to date (`-g` for global ones only, `-p` for project ones only).
+
+CI runs `scripts/verify-install-channel.sh`, which installs this checkout globally into a throwaway home folder for Claude Code, GitHub Copilot, Codex and Cursor and checks what each receives.
+
 ## Shared skill resources
 
 Some skills share a resource file (e.g. `PLATFORMS.md`). The single source lives in `shared/`, and `scripts/sync-shared.sh` copies it into each skill folder that uses it, so every skill stays self-contained when installed on its own ([ADR 0001](docs/adr/0001-shared-skill-resources-are-generated-copies.md)). Edit only the file in `shared/`, never a copy. Mappings name a skill; the script finds it under `skills/` or `skills/.experimental/`.
@@ -22,4 +36,4 @@ CI runs `scripts/sync-shared.sh --check` and fails when a copy is out of date.
 
 ## Unpublished skills
 
-Skills not offered by default live in `skills/.experimental/<name>/` and set `metadata.internal: true` ([ADR 0002](docs/adr/0002-unpublished-skills-live-in-experimental-and-are-internal.md)). `npx skills add idodoron11/Agentarium` skips them; install one explicitly with `-s <name>` (currently `refactor`, `mypy-check`, `daily-standup`).
+Skills not offered by default live in `skills/.experimental/<name>/` and set `metadata.internal: true` ([ADR 0002](docs/adr/0002-unpublished-skills-live-in-experimental-and-are-internal.md)). The install command above skips them; opt in to one by name with `-s <name>` (currently `refactor`, `mypy-check`, `daily-standup`), for example `npx skills add idodoron11/Agentarium -s daily-standup`.

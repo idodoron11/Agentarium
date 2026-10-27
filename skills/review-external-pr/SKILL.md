@@ -11,13 +11,11 @@ Review the pull request at the URL the user provided. The run has two halves: bu
 
 Each run is one **review round**: an **initial review**, or a **re-review** after the author responded to an earlier round. Step 3 decides which.
 
-**Signer**: the name of the agent product running this skill (e.g. `Copilot`, `Claude Code`, `Cursor`). Every posted comment ends with `*Reviewed by <signer>*`.
+Every posted comment ends with the signer line `*Reviewed by <signer>*` (*Signer* in PLATFORMS.md).
 
 ## Step 1 — Resolve tooling
 
-Identify the platform from the URL (`github.com/<owner>/<repo>/pull/<n>` or `dev.azure.com/<org>/<project>/_git/<repo>/pullrequest/<n>`; `<org>.visualstudio.com` is Azure DevOps too). Open [PLATFORMS.md](PLATFORMS.md) and read the section for that platform only.
-
-Pick the first **tier** that passes its check in PLATFORMS.md: CLI → MCP → guidance. A tier that is present but fails its check (unauthenticated, missing extension, wrong org) is misconfigured: fall through to the next tier, and if none works, give the user the guidance for the failing tier and stop.
+Open [PLATFORMS.md](PLATFORMS.md). Identify the platform from the URL forms there, read that platform's section only, and choose a **tier** per *Choosing a tier*. [REVIEWING.md](REVIEWING.md) extends the same section and tier with the review-only recipes that later steps point to.
 
 Done when: a read call through the chosen tier returned the PR's metadata, or the user has setup guidance and the run has stopped.
 
@@ -115,7 +113,7 @@ Done when: the user has explicitly approved both the current approved set and th
 
 On a re-review, post replies and thread status changes first, per RE-REVIEW.md.
 
-Post the approved set through the chosen tier, exactly as approved, following the posting recipe in PLATFORMS.md: one inline comment per finding, the summary comment, and the confirmed verdict. If a comment fails to post (e.g. its line is outside the diff), keep posting the rest and record the failure.
+Post the approved set through the chosen tier, exactly as approved, following the *Post* recipe and *Verdict mapping* in REVIEWING.md: one inline comment per finding, the summary comment, and the confirmed verdict. If a comment fails to post (e.g. its line is outside the diff), keep posting the rest and record the failure.
 
 Done when: every comment in the approved set was posted or recorded as failed, and the verdict was submitted or recorded as failed.
 

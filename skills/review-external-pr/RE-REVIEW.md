@@ -4,7 +4,7 @@ Re-review branch of [SKILL.md](SKILL.md): the author has responded to an earlier
 
 ## Step 3 — Fetch history
 
-Collect, through the chosen tier ([PLATFORMS.md](PLATFORMS.md), *History* recipes):
+Collect, through the chosen tier ([PLATFORMS.md](PLATFORMS.md) *Threads*, [REVIEWING.md](REVIEWING.md) *History*):
 
 - **Previous threads**: every thread whose first comment is by your account, whatever its status (open, resolved, outdated). For each, record: thread id, `file:line`, the original comment, every reply after it, and its platform status. Take severity and **Blocks** from the posted header (`🟡 **IMPORTANT — Quality (blocking): …**`; 🔴 always blocks, 🟢 never does). When the header is absent (a comment you wrote by hand), infer both and mark them *(inferred)*.
 - **Other reviewers' open threads** and the PR conversation comments: context for the author's changes.
@@ -61,4 +61,4 @@ The user may drop or edit replies and change thread outcomes, as with findings.
 
 ## Step 8 — Post
 
-First post every approved reply, then change thread status per its action (resolve, or reopen a thread the author closed). Then post the new findings, summary and verdict with the SKILL.md posting recipe. Record each failed reply or status change and keep going.
+First post every approved reply (PLATFORMS.md *Thread replies*), then change thread status per its action, mapped in REVIEWING.md *Thread outcomes*. Then post the new findings, summary and verdict with the SKILL.md posting recipe. Record each failed reply or status change and keep going.

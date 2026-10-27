@@ -104,6 +104,8 @@ Delete the temp files afterwards.
 
 **Read**: `repo_pull_request` with `action: get` and `includeChangedFiles: true` for metadata (head branch `sourceRefName`, head and target commits) and the changed files; `repo_file` with `action: get_content`, `version` and `versionType` for a file at a ref. This tier has no diff call: diff each changed file by reading it at the target and head commits. It has no identity lookup either.
 
+Servers before v2.9 expose one tool per operation instead (`repo_get_pull_request_by_id`, `repo_get_pull_request_changes` for the diff, `repo_get_file_content`, `repo_list_pull_request_threads`, `repo_reply_to_comment`, `repo_update_pull_request_thread`); use them when the consolidated tools are absent.
+
 **Threads**: `repo_pull_request_thread` with `action: list` and `fullResponse: true` (threads, status, comments with authors); filter with `status` to fetch only one status.
 
 **Thread replies**: `repo_pull_request_thread_write` with `action: reply` (`threadId`, `content`), and `action: update_status` with `status` from *Thread status*.

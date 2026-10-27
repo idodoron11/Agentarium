@@ -84,6 +84,6 @@ Then cast the vote from the mapping (for Comment, only when resetting an earlier
 
 ### Tier 2 — Azure DevOps MCP server
 
-**Post**: `repo_pull_request_thread_write` with `action: create` per finding (`filePath`, `rightFileStartLine`, `rightFileEndLine` + `rightFileEndOffset`); then one thread without file context for the summary. Cast the vote with `repo_pull_request_write`, `action: vote`, `vote` from the mapping. If the vote fails, record it and give the user the `az repos pr set-vote` command or the web UI's Approve menu.
+**Post**: `repo_pull_request_thread_write` with `action: create` per finding (`filePath`, `rightFileStartLine`, `rightFileEndLine` + `rightFileEndOffset`); then one thread without file context for the summary. Cast the vote with `repo_pull_request_write`, `action: vote`, `vote` from the mapping. If the vote fails, record it and give the user the `az repos pr set-vote` command or the web UI's Approve menu. Servers before v2.9 use `repo_create_pull_request_thread` and `repo_vote_pull_request` instead.
 
 **History** (re-review): `repo_pull_request` with `action: get` for your vote in the reviewers. This tier has no iteration lookup: reuse a baseline from this session, else use the full diff. Without an identity lookup, previous threads are those whose first comment carries your signer line.

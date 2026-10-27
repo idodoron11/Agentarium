@@ -1,6 +1,6 @@
 # Review tooling
 
-Review-only recipes that extend [PLATFORMS.md](PLATFORMS.md): posting a review, casting the verdict, and reading review history. Use the same platform section and tier you chose there.
+Review-only recipes that extend [PLATFORMS.md](PLATFORMS.md): posting a review and the answers comment, verifying anchors, casting the verdict, and reading review history. Use the same platform section and tier you chose there.
 
 ## Verdict mapping
 
@@ -20,7 +20,7 @@ On a re-review, apply each thread outcome's action through the PLATFORMS.md *Thr
 
 ### Tier 1 — `gh` CLI
 
-**Post** — one call creates the whole review with its inline comments and the verdict (`event` from the mapping above). Write the payload to a temp file and send it:
+**Post** — one call creates the whole review with its inline comments and the verdict (`event` from the mapping above). Build the payload with a JSON serializer (`jq -n` or Python `json.dump`), which escapes the quotes and code fences in comment bodies, write it to a temp file, and send it:
 
 ```json
 {
@@ -38,6 +38,14 @@ On a re-review, apply each thread outcome's action through the PLATFORMS.md *Thr
 
 A 422 means at least one comment is anchored outside the diff and the whole review is rejected: move each offending finding into the summary body under its file and line, record it as a failure, and resend. Delete the temp file afterwards.
 
+**Verify anchors** — after a 201, list the review's comments from the pull-level endpoint (`reviews/<id>/comments` reports `line: null` even for anchored comments):
+
+`gh api repos/<owner>/<repo>/pulls/<n>/comments --paginate --jq '.[] | select(.pull_request_review_id == <review id>) | {path, line: (.line // .original_line)}'`
+
+`<review id>` is the `id` in the POST response. A comment that is missing or has a null `line` is a failure.
+
+**Answers** — `gh pr comment <url> --body-file answers.md`. Delete the temp file afterwards.
+
 **History** (re-review):
 - Reviews:
   ```sh
@@ -50,6 +58,8 @@ A 422 means at least one comment is anchored outside the diff and the whole revi
 ### Tier 2 — GitHub MCP server
 
 **Post**: `pull_request_review_write` with `method: create` and `commitID` = head SHA (omit `event`, which opens a pending review) → `add_comment_to_pending_review` per finding (`path`, `line`, `side`, `startLine`/`startSide` for ranges, `subjectType: LINE`) → `pull_request_review_write` with `method: submit_pending`, `event` = the mapped verdict, `body` = summary.
+
+**Answers**: `add_issue_comment` with the PR number as `issue_number`.
 
 **History** (re-review): `pull_request_read` with `get_reviews` (author, `commit_id`, state → baseline and latest verdict). Delta: `get_commits`; when the baseline is in the list and no later commit has two parents, fetch each later commit with `get_commit` and combine their diffs; otherwise use the full diff.
 
@@ -76,6 +86,8 @@ Use `leftFileStart`/`leftFileEnd` instead for findings on removed lines.
 `az devops invoke --area git --resource pullRequestThreads --route-parameters project=<project> repositoryId=<repoId> pullRequestId=<n> --http-method POST --in-file thread.json --api-version 7.1`
 
 Then cast the vote from the mapping (for Comment, only when resetting an earlier vote): `az repos pr set-vote --id <n> --vote <value>`. A branch policy can forbid authors from voting on their own PR; record that as a failed verdict.
+
+**Answers**: one more thread without `threadContext`, like the summary.
 
 **History** (re-review):
 - Latest verdict: your entry in `reviewers[]` from `az repos pr show` (`vote`: 10 approve, 5 approve with suggestions, -5 wait for author, -10 reject).

@@ -1,131 +1,91 @@
 ---
 name: review-external-pr
-description: "Review an external pull request from a GitHub or Azure DevOps URL and post findings as inline code comments, one per finding, each signed 'Reviewed by Copilot'. Use when the user shares a PR URL and asks to review it."
+description: "Review a GitHub or Azure DevOps PR from its URL, draft inline findings for your approval, then post them signed by the reviewing agent."
 argument-hint: "Full PR URL (GitHub or Azure DevOps)"
+disable-model-invocation: true
 ---
 
 # External PR Review
 
-Review the pull request at the URL provided by the user.
+Review the pull request at the URL the user provided. The run has two halves: build a **draft** review locally, then post only the **approved set** once the user signs off.
 
-## Step 1 — Fetch the PR
+**Signer**: the name of the agent product running this skill (e.g. `Copilot`, `Claude Code`, `Cursor`). Every posted comment ends with `*Reviewed by <signer>*`.
 
-Determine the platform from the URL:
-- **GitHub**: `github.com/owner/repo/pull/NUMBER` → use `mcp_github_mcp_se_pull_request_read` (methods: `get`, `get_diff`, `get_files`)
-- **Azure DevOps**: `dev.azure.com/org/project/_git/repo/pullrequest/NUMBER` → use `mcp_azure_devops__repo_get_pull_request_changes`
+## Step 1 — Resolve tooling
 
-Retrieve:
-1. PR metadata (title, description, author, base branch, head commit SHA)
-2. Full unified diff (`get_diff`)
-3. List of changed files (`get_files`)
+Identify the platform from the URL (`github.com/<owner>/<repo>/pull/<n>` or `dev.azure.com/<org>/<project>/_git/<repo>/pullrequest/<n>`; `<org>.visualstudio.com` is Azure DevOps too). Open [PLATFORMS.md](PLATFORMS.md) and read the section for that platform only.
 
-## Step 2 — Load Instruction Files
+Pick the first **tier** that passes its check in PLATFORMS.md: CLI → MCP → guidance. A tier that is present but fails its check (unauthenticated, missing extension, wrong org) is misconfigured: fall through to the next tier, and if none works, give the user the guidance for the failing tier and stop.
 
-Load the following instruction files and apply their rules throughout the review:
+Done when: a read call through the chosen tier returned the PR's metadata, or the user has setup guidance and the run has stopped.
 
-**User-level instructions** (always apply, regardless of repository):
-- Any `*.instructions.md` files found in `~/.copilot/instructions/` that match the files being reviewed (e.g., `clean-code.instructions.md`, `code-review.instructions.md`)
+## Step 2 — Fetch the PR
 
-**Repository-level instructions** — always fetch remotely via API from the PR's repository (do NOT rely on local workspace files):
+Through the chosen tier, retrieve: title, description, author, base branch, head commit SHA, the list of changed files, and the full diff.
 
-For **GitHub**, call `mcp_github_mcp_se_get_file_contents` with `ref` set to the PR's base branch (e.g. `main`):
-1. Attempt to list `.github/instructions/` — fetch each `*.instructions.md` found there.
-2. Attempt to fetch `.github/copilot-instructions.md`.
-3. If a file is not found (404), skip it silently.
+Done when: you hold a diff for every changed file in the list.
 
-For **Azure DevOps**, call `mcp_azure_devops__repo_get_file_content` with the same paths against the target branch:
-1. `.github/instructions/*.instructions.md` (list directory first, then fetch each file)
-2. `.github/copilot-instructions.md`
+## Step 3 — Gather standards
 
-Apply every instruction file that was successfully retrieved.
+Collect every coding standard that applies, from two sources:
 
-## Step 3 — Analyze the Diff
+- **User-level**: instruction and rule files your harness already loaded into this session (custom instructions, `*.instructions.md`, memory files, rules), wherever they live. Keep those whose scope (e.g. `applyTo` globs) matches a changed file.
+- **Repository-level**: fetched remotely from the PR's base branch — the reviewed repo is usually not the local workspace. Probe each of: `AGENTS.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, `.github/instructions/**`, `.cursor/rules/**`, `.cursorrules`, `CONTRIBUTING.md`, plus any file those documents point to as a standard. A missing path is skipped.
 
-Read every changed file in full. For each change, evaluate:
+Done when: every candidate path has been probed and you can list the standards you will apply.
 
-### Security (🔴 CRITICAL — block merge)
-- Exposed secrets, credentials, or PII in code or logs
-- SQL injection, XSS, CSRF, or other OWASP Top 10 vulnerabilities
-- Missing authentication or authorization checks
-- Insecure cryptography or use of deprecated security APIs
-- Unvalidated or unsanitized user inputs
+## Step 4 — Analyze
 
-### Correctness (🔴 CRITICAL — block merge)
-- Logic errors or off-by-one mistakes
-- Race conditions or threading issues (e.g., improper use of `Monitor.Pulse` vs `Monitor.PulseAll`)
-- Data corruption risks
-- Breaking changes to public APIs without versioning
+Read every changed file in full at the head commit, not only its hunks. Judge each change against the rubric below and against every standard from Step 3. Anchor each finding to one line (or a line range) present in the diff: right side for added/changed code, left side for removed code.
 
-### Code Quality (🟡 IMPORTANT — requires discussion)
-- Violations of SOLID principles or major code duplication
-- Missing tests for critical or new code paths
-- Obvious performance issues (N+1 queries, memory leaks, unnecessary allocations)
-- Architectural deviations from established patterns
+### Rubric
 
-### Style & Readability (🟢 SUGGESTION — non-blocking)
-- Poor naming, magic numbers, or magic strings
-- Overly complex or deeply nested logic
-- Inconsistency with patterns established elsewhere in the same PR or codebase
-- Minor deviations from the instruction-file conventions
+- 🔴 **CRITICAL — Security** (blocks merge): exposed secrets, credentials or PII; injection, XSS, CSRF and other OWASP Top 10 classes; missing authentication or authorization; weak or deprecated crypto; unvalidated input.
+- 🔴 **CRITICAL — Correctness** (blocks merge): logic and off-by-one errors; races and concurrency misuse; data corruption; unversioned breaking changes to public APIs.
+- 🟡 **IMPORTANT — Quality** (needs discussion): SOLID violations, significant duplication; missing tests for new or critical paths; performance traps (N+1 queries, leaks, needless allocation); deviation from established architecture.
+- 🟢 **SUGGESTION — Style** (non-blocking): naming, magic values, deep nesting, inconsistency with the surrounding codebase, minor deviations from a standard.
+- ✅ **Positive** observation tied to a specific line (optional).
 
-## Step 4 — Post the Review
+Done when: every changed file and every standard is accounted for, each either yielding findings or noted as clean.
 
-### Inline comments (one per finding)
+## Step 5 — Present the draft
 
-For **every individual finding** — whether critical, important, or a suggestion — post a **separate inline comment** attached to the most relevant line in the diff.
+Show the user the full draft; post nothing yet.
 
-**Workflow:**
-1. Call `mcp_github_mcp_se_pull_request_review_write` with `method: "create"` and `commitID` set to the PR's head SHA to open a **pending review** (no `event` field — do NOT submit yet).
-2. For each finding, call `mcp_github_mcp_se_add_comment_to_pending_review` with:
-   - `path`: relative file path
-   - `line`: the specific line number in the diff (RIGHT side for additions, LEFT for deletions)
-   - `startLine` / `startSide` if the finding spans multiple lines
-   - `side`: `RIGHT` for new code, `LEFT` for removed code
-   - `subjectType`: `LINE`
-   - `body`: the comment text (see format below)
+1. A numbered table: `#`, severity, `file:line`, short title.
+2. Each inline comment body in full, under its number, in this format:
 
-**Comment body format:**
-````
-<priority-emoji> **<Priority> — <Category>: <Short title>**
+   ````
+   <emoji> **<Priority> — <Category>: <Short title>**
 
-<Explanation of the issue and why it matters.>
+   <What is wrong and why it matters.>
 
-**Suggested fix:**
-```<language>
-// corrected code snippet
-```
+   **Suggested fix:**
+   ```<language>
+   <corrected snippet>
+   ```
 
-*Reviewed by Copilot*
-````
+   *Reviewed by <signer>*
+   ````
 
-Priority emoji mapping:
-- 🔴 CRITICAL
-- 🟡 IMPORTANT
-- 🟢 SUGGESTION
-- ✅ (for positive observations, if attached to a specific line)
+3. The summary comment in full: 1–3 sentences on what the PR does and whether it is sound; a **What's good** bullet list; the finding count (e.g. "1 critical, 2 important, 1 suggestion — see inline comments"); ending with `*Reviewed by <signer>*`.
 
-### One general comment (summary + positives)
+Then ask the user to approve, drop findings by number, or edit text, line, or severity.
 
-After all inline comments are queued, call `mcp_github_mcp_se_pull_request_review_write` with `method: "submit_pending"` and include in the `body`:
+Done when: every finding and the summary are on screen in full, and the user has been asked to decide.
 
-1. **Summary**: 1–3 sentences describing what the PR does and whether it is correct overall.
-2. **What's good**: Bullet list of well-written aspects (clean design, correct use of patterns, good test coverage, helpful comments, etc.).
-3. **Finding count**: e.g., "1 critical, 2 important, 1 suggestion — see inline comments."
+## Step 6 — Confirm
 
-End the body with:
-```
-*Reviewed by Copilot*
-```
+Apply each change the user requests and re-show the affected comments. Repeat until the user explicitly approves posting. The review verdict is a plain comment unless the user asks for approve or request-changes.
 
-Use `event: "COMMENT"` (never APPROVE or REQUEST_CHANGES unless the user explicitly asks).
+Done when: the user has explicitly approved the current approved set.
 
-### Fallback for Azure DevOps
+## Step 7 — Post
 
-Azure DevOps does not support pending reviews. Use `mcp_azure_devops__repo_create_pull_request_thread` for each finding with `filePath`, `rightFileStartLine`, and `rightFileEndLine` populated. Post the general comment as a separate thread without file/line context.
+Post the approved set through the chosen tier, exactly as approved, following the posting recipe in PLATFORMS.md: one inline comment per finding, plus the summary comment. If a comment fails to post (e.g. its line is outside the diff), keep posting the rest and record the failure.
 
-## Step 5 — Report Back
+Done when: every comment in the approved set was posted or recorded as failed.
 
-After posting, reply to the user with:
-- Link to the PR
-- Total number of comments posted (inline + general)
-- One-line summary of the most important finding
+## Step 8 — Report
+
+Reply with the PR link, the number of comments posted (inline + summary), any failures with their text so the user can post by hand, and a one-line summary of the most important finding.

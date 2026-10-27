@@ -25,7 +25,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/skill-folders.sh"
 # "<source under shared/> <skill name>", one pair per line. A skill is found under skills/ (Published)
 # or skills/.experimental/ (Unpublished); see docs/adr/0002-unpublished-skills-live-in-experimental-and-are-internal.md.
 MAPPINGS="${SYNC_SHARED_MAPPINGS:-
-PLATFORMS.md review-external-pr
+PLATFORMS.md review-pr
 PLATFORMS.md triage-pr-comments
 }"
 

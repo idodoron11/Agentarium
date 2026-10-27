@@ -120,7 +120,7 @@ done
 pass "no Unpublished skill ($(echo $UNPUBLISHED)) installed by default"
 
 # Shared resources and scripts are part of "every file", but name them so a regression is explicit.
-for skill in review-external-pr triage-pr-comments; do
+for skill in review-pr triage-pr-comments; do
     [ -f "$FAKE_HOME/$CANONICAL_DIR/$skill/PLATFORMS.md" ] || fail "$skill is missing PLATFORMS.md"
 done
 for script in pr-diff.sh pr-diff.ps1; do

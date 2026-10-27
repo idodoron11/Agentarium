@@ -10,7 +10,7 @@ Whether you’re experimenting with prompt engineering, creating custom agents, 
 
 ## Installing skills
 
-Agentarium's Published skills (`review-external-pr`, `triage-pr-comments`, `pr-diff`, `cherry-pick`) install into Claude Code, GitHub Copilot, Codex, Cursor and other coding agents with [`npx skills`](https://github.com/vercel-labs/skills):
+Agentarium's Published skills (`review-pr`, `triage-pr-comments`, `pr-diff`, `cherry-pick`) install into Claude Code, GitHub Copilot, Codex, Cursor and other coding agents with [`npx skills`](https://github.com/vercel-labs/skills):
 
 ```sh
 npx skills add idodoron11/Agentarium

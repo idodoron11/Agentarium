@@ -1,5 +1,5 @@
 ---
-name: review-external-pr
+name: review-pr
 description: "Review or re-review a GitHub or Azure DevOps PR from its URL, draft inline findings and a suggested verdict for your approval, then post them signed by the reviewing agent."
 argument-hint: "Full PR URL (GitHub or Azure DevOps)"
 disable-model-invocation: true

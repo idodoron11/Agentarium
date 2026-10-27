@@ -1,6 +1,6 @@
 # Shared skill resources are generated copies committed in each skill folder
 
-`review-external-pr` and `triage-pr-comments` share their GitHub/Azure DevOps platform recipes. The single source lives in `shared/`, and `scripts/sync-shared.sh` copies it into each consuming skill folder; the copies are committed, marked generated, and enforced by a pre-commit hook and a CI `--check`. Every skill must stay self-contained: a SKILL.md links only to files inside its own folder.
+`review-pr` and `triage-pr-comments` share their GitHub/Azure DevOps platform recipes. The single source lives in `shared/`, and `scripts/sync-shared.sh` copies it into each consuming skill folder; the copies are committed, marked generated, and enforced by a pre-commit hook and a CI `--check`. Every skill must stay self-contained: a SKILL.md links only to files inside its own folder.
 
 ## Considered Options
 

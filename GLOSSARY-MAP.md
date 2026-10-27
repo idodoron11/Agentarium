@@ -2,7 +2,7 @@
 
 ## Contexts
 
-- [Pull Request Review](./docs/contexts/pr-review/GLOSSARY.md): the reviewer–author loop that `review-external-pr` and `triage-pr-comments` drive
+- [Pull Request Review](./docs/contexts/pr-review/GLOSSARY.md): the reviewer–author loop that `review-pr` and `triage-pr-comments` drive
 - [Distribution](./docs/contexts/distribution/GLOSSARY.md): how Agentarium's skills reach and run inside coding agents
 
 ## Relationships

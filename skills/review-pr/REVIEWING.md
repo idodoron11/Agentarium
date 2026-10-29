@@ -1,6 +1,6 @@
 # Review tooling
 
-Review-only recipes that extend [PLATFORMS.md](PLATFORMS.md): posting a review and the answers comment, verifying anchors, casting the verdict, and reading review history. Use the same platform section and tier you chose there.
+Review-only recipes that extend [PLATFORMS.md](PLATFORMS.md): listing the repository tree, posting a review and the answers comment, verifying anchors, casting the verdict, and reading review history. Use the same platform section and tier you chose there.
 
 ## Verdict mapping
 
@@ -19,6 +19,8 @@ On a re-review, apply each thread outcome's action through the PLATFORMS.md *Thr
 ## GitHub
 
 ### Tier 1 — `gh` CLI
+
+**Tree** — one call lists every file on the base branch: `gh api "repos/<owner>/<repo>/git/trees/<base>?recursive=1" --jq '.truncated, (.tree[] | select(.type == "blob") | .path)'`. Narrow the `--jq` filter to the candidate names on a large repo. When `truncated` is `true`, list the candidate directories with PLATFORMS.md *Directory listing* instead. With a temp clone already fetched, `git -C <tmpdir> ls-tree -r --name-only origin/base` serves the same purpose.
 
 **Post** — one call creates the whole review with its inline comments and the verdict (`event` from the mapping above). Build the payload with a JSON serializer (`jq -n` or Python `json.dump`), which escapes the quotes and code fences in comment bodies, write it to a temp file, and send it:
 
@@ -57,6 +59,8 @@ A 422 means at least one comment is anchored outside the diff and the whole revi
 
 ### Tier 2 — GitHub MCP server
 
+**Tree**: a `get_repository_tree` tool with `recursive: true` at the base branch, when the server has one; otherwise `get_file_contents` on each candidate path and directory with `ref` = base.
+
 **Post**: `pull_request_review_write` with `method: create` and `commitID` = head SHA (omit `event`, which opens a pending review) → `add_comment_to_pending_review` per finding (`path`, `line`, `side`, `startLine`/`startSide` for ranges, `subjectType: LINE`) → `pull_request_review_write` with `method: submit_pending`, `event` = the mapped verdict, `body` = summary.
 
 **Answers**: `add_issue_comment` with the PR number as `issue_number`.
@@ -66,6 +70,8 @@ A 422 means at least one comment is anchored outside the diff and the whole revi
 ## Azure DevOps
 
 ### Tier 1 — `az` CLI with the `azure-devops` extension
+
+**Tree**: in the temp clone from PLATFORMS.md, `git -C <tmpdir> ls-tree -r --name-only <targetHead>`. Without a clone: `az devops invoke --area git --resource items --route-parameters project=<project> repositoryId=<repoId> --query-parameters scopePath=/ recursionLevel=Full versionDescriptor.version=<base branch> versionDescriptor.versionType=branch --api-version 7.1 --query "value[].path" -o tsv`.
 
 **Post** — one thread per finding, plus one thread without `threadContext` for the summary:
 

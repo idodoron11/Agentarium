@@ -31,7 +31,7 @@ URL: `github.com/<owner>/<repo>/pull/<n>`.
 
 ### Tier 1 — `gh` CLI
 
-**Check**: `gh auth status` succeeds and `gh pr view <url> --json number` returns the PR. A 404 on a repo you can open in the browser means the account lacks access (SSO not authorized, or wrong account) — misconfigured.
+**Check**: `gh auth status` succeeds and `gh pr view <url> --json number` returns the PR. A 404 or 403 means the active account lacks access (wrong account, or SSO not authorized). When `gh auth status` lists several `github.com` accounts, run `gh auth switch -u <login>` for each other account and repeat the check; the first that passes is the tier, and you tell the user which account is now active. Only when every account fails is the tier misconfigured.
 
 **Read**:
 - Metadata: `gh pr view <url> --json title,body,state,isDraft,author,baseRefName,headRefName,headRefOid,files`

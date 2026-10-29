@@ -42,10 +42,10 @@ Done when: the round is settled, and on a re-review, the history step's completi
 
 Collect every coding standard that applies, from two sources:
 
-- **User-level**: instruction and rule files your harness already loaded into this session (custom instructions, `*.instructions.md`, memory files, rules), wherever they live. Keep those whose scope (e.g. `applyTo` globs) matches a changed file.
-- **Repository-level**: fetched remotely from the PR's base branch — the reviewed repo is usually not the local workspace. Probe each of: `AGENTS.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, `.github/instructions/**`, `.cursor/rules/**`, `.cursorrules`, `CONTRIBUTING.md`, plus any file those documents point to as a standard. A missing path is skipped.
+- **User-level**: instruction and rule files your harness exposes in this session (custom instructions, `*.instructions.md`, memory files, rules), wherever they live. Keep those whose scope (e.g. `applyTo` globs) matches a changed file. A harness often lists such a file by path and scope only; open it.
+- **Repository-level**: fetched remotely from the PR's base branch — the reviewed repo is usually not the local workspace. List the base branch's file tree once (REVIEWING.md *Tree*) and match it against: `AGENTS.md` and `CLAUDE.md` at the root or in any ancestor directory of a changed file, `.github/copilot-instructions.md`, `.github/instructions/**`, `.cursor/rules/**`, `.cursorrules`, `CONTRIBUTING.md`, plus any file those documents point to as a standard.
 
-Done when: every candidate path has been probed and you can list the standards you will apply.
+Done when: every candidate path has been matched against the tree, and every matching standards file, user-level and repository-level, has been read in full. List them; Step 5 accounts for each.
 
 ## Step 5 — Analyze
 
@@ -115,7 +115,7 @@ Show the user the full draft; post nothing yet. On a re-review, use the RE-REVIE
    *Answered by <signer>*
    ```
 
-Then ask the user to approve, drop findings or answers by number, edit text, line, or severity, or override the verdict.
+Then ask the user to approve, drop findings or answers by number, edit text, line, or severity, or override the verdict, and end your turn. Approval arrives only as a user message. When the harness runs unattended or nudges you to mark the task complete, the draft is still the stopping point; with no user to reply, the draft is the deliverable.
 
 Done when: every finding, every answer, the summary, and the suggested verdict are on screen in full, and the user has been asked to decide.
 
@@ -127,9 +127,11 @@ Done when: the user has explicitly approved both the current approved set and th
 
 ## Step 8 — Post
 
+Open [REVIEWING.md](REVIEWING.md) and read *Verdict mapping* and your tier's *Post*, *Verify anchors*, and *Answers* before the first write call.
+
 On a re-review, post replies and thread status changes first, per RE-REVIEW.md.
 
-Post the approved set through the chosen tier, exactly as approved, following the *Post* recipe and *Verdict mapping* in REVIEWING.md: one inline comment per finding, the summary comment, and the confirmed verdict. If a comment fails to post (e.g. its line is outside the diff), keep posting the rest and record the failure. Then check every posted inline comment per REVIEWING.md *Verify anchors* where your tier has it, and post the kept answers per *Answers*.
+Post the approved set through the chosen tier, exactly as approved, per *Post*: one inline comment per finding, the summary comment, and the confirmed verdict. If a comment fails to post (e.g. its line is outside the diff), keep posting the rest and record the failure. Then check every posted inline comment per REVIEWING.md *Verify anchors* where your tier has it, and post the kept answers per *Answers*.
 
 Done when: every comment in the approved set was posted and verified anchored, or recorded as failed; the answers comment, if any answers were kept, was posted or recorded as failed; and the verdict was submitted or recorded as failed.
 

@@ -45,7 +45,7 @@ Collect every coding standard that applies, from two sources:
 - **User-level**: instruction and rule files your harness exposes in this session (custom instructions, `*.instructions.md`, memory files, rules), wherever they live. Keep those whose scope (e.g. `applyTo` globs) matches a changed file. A harness often lists such a file by path and scope only; open it.
 - **Repository-level**: fetched remotely from the PR's base branch — the reviewed repo is usually not the local workspace. List the base branch's file tree once (REVIEWING.md *Tree*) and match it against: `AGENTS.md` and `CLAUDE.md` at the root or in any ancestor directory of a changed file, `.github/copilot-instructions.md`, `.github/instructions/**`, `.cursor/rules/**`, `.cursorrules`, `CONTRIBUTING.md`, plus any file those documents point to as a standard.
 
-Done when: every candidate path has been matched against the tree, and every matching standards file, user-level and repository-level, has been read in full. List them; Step 5 accounts for each.
+Done when: the tree has been listed, every candidate path has been matched against it, and every matching standards file, user-level and repository-level, has been read in full. Each one becomes a row of the Step 5 ledger.
 
 ## Step 5 — Analyze
 
@@ -67,7 +67,20 @@ Also check the PR for **incomplete implementation**: work the description promis
 
 Collect every **question** the description asks, of the reviewer or of anyone, that your account has not already answered on the PR, and draft an answer to each. An answer is your opinion posted under the user's name, so it stays separate from findings and the summary.
 
-Done when: every changed file and every standard is accounted for, each either yielding findings or noted as clean, every 🟡 finding carries a merge-blocking judgement, and every question in the description has a drafted answer.
+### Ledger
+
+The **ledger** is a table with one row per changed file (on a re-review, per file in the delta) and one row per Step 4 standards file:
+
+| File | Kind | Read | Result |
+|---|---|---|---|
+| `src/Foo.cs` | changed | full @ `<head short SHA>` | #2, #5 |
+| `clean-code.instructions.md` | standard (user, `**/*.cs`) | full | clean |
+
+- **Read** states what you actually opened: `full @ <SHA>` for a changed file, `full` for a standard. A row you read only as hunks is not done.
+- **Result** is *clean* or the finding numbers it yielded; a standard yields a finding when that finding cites it.
+- When the base tree holds no repository-level standards, add one row: `repo standards` | standard (repo) | tree of `<base>@<short SHA>`, `<N>` paths | none found.
+
+Done when: the ledger has a row for every changed file and every Step 4 standard, each with a filled **Read** and **Result**; every 🟡 finding carries a merge-blocking judgement; and every question in the description has a drafted answer.
 
 ### Verdict
 
@@ -81,10 +94,11 @@ Three verdicts exist: **Approve**, **Comment** (comments only, no vote), **Reque
 
 ## Step 6 — Present the draft
 
-Show the user the full draft; post nothing yet. On a re-review, use the RE-REVIEW.md layout; the comment format below still applies to new findings.
+Show the user the full draft; post nothing yet. On a re-review, show the ledger, then the RE-REVIEW.md layout; the comment format below still applies to new findings.
 
-1. A numbered table: `#`, severity, `file:line`, short title, **Blocks** (yes for 🔴, incomplete implementation, and merge-blocking 🟡; no otherwise).
-2. Each inline comment body in full, under its number, in this format:
+1. The **ledger** from Step 5, every row.
+2. A numbered findings table: `#`, severity, `file:line`, short title, **Blocks** (yes for 🔴, incomplete implementation, and merge-blocking 🟡; no otherwise).
+3. Each inline comment body in full, under its number, in this format:
 
    ````
    <emoji> **<Priority> — <Category>[ (blocking)]: <Short title>**
@@ -101,9 +115,9 @@ Show the user the full draft; post nothing yet. On a re-review, use the RE-REVIE
 
    Write ` (blocking)` only on merge-blocking 🟡 findings: it lets a later re-review recover the judgement.
 
-3. The summary comment in full: a verdict line (on Approve: "Approved — inline comments are non-blocking suggestions"; on Comment: "Not ready to merge yet — see blocking findings"; on Request changes: "Changes requested — see blocking findings"); 1–3 sentences on what the PR does and whether it is sound; a **What's good** bullet list; the finding count (e.g. "1 critical, 2 important, 1 suggestion — see inline comments"); ending with `*Reviewed by <signer>*`.
-4. The suggested verdict with a one-line rationale naming the blocking findings by number, if any.
-5. **Answers**, numbered `A1`, `A2`, …: each question quoted, then its drafted answer. Kept answers are posted together as one conversation comment:
+4. The summary comment in full: a verdict line (on Approve: "Approved — inline comments are non-blocking suggestions"; on Comment: "Not ready to merge yet — see blocking findings"; on Request changes: "Changes requested — see blocking findings"); 1–3 sentences on what the PR does and whether it is sound; a **What's good** bullet list; the finding count (e.g. "1 critical, 2 important, 1 suggestion — see inline comments"); ending with `*Reviewed by <signer>*`.
+5. The suggested verdict with a one-line rationale naming the blocking findings by number, if any.
+6. **Answers**, numbered `A1`, `A2`, …: each question quoted, then its drafted answer. Kept answers are posted together as one conversation comment:
 
    ```
    **Answers to questions in the description**
@@ -117,7 +131,7 @@ Show the user the full draft; post nothing yet. On a re-review, use the RE-REVIE
 
 Then ask the user to approve, drop findings or answers by number, edit text, line, or severity, or override the verdict, and end your turn. Approval arrives only as a user message. When the harness runs unattended or nudges you to mark the task complete, the draft is still the stopping point; with no user to reply, the draft is the deliverable.
 
-Done when: every finding, every answer, the summary, and the suggested verdict are on screen in full, and the user has been asked to decide.
+Done when: the ledger, every finding, every answer, the summary, and the suggested verdict are on screen in full, and the user has been asked to decide.
 
 ## Step 7 — Confirm
 

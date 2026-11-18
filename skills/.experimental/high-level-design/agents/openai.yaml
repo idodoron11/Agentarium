@@ -1,0 +1,5 @@
+interface:
+  display_name: "High-Level Design"
+  short_description: "Compile an HLDD from design artifacts"
+policy:
+  allow_implicit_invocation: false
